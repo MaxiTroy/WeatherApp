@@ -1,9 +1,18 @@
 import Head from "next/head";
+import Searchbox from "../componets/searchbox";
 
 export default function Home() {
   return (
     <div>
-      <h1>Hello word</h1>
+      <Head>
+        <title>weather app -Next </title>
+      </Head>
+
+      <div>
+        <div>
+          <Searchbox />
+        </div>
+      </div>
     </div>
   );
 }
