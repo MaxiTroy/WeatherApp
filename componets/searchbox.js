@@ -1,20 +1,30 @@
-import React, { useState } from "react";
+import React from "react";
 import cities from "../lib/city.list.json";
 import Link from "next/link";
+import Router from "next/router";
 
-const searchbox = () => {
-  const [query, setQuery] = useState("");
-  const [result, setResult] = useState([]);
+export default function SearchBox({ placeholder }) {
+  const [query, setQuery] = React.useState("");
+  const [results, setResults] = React.useState([]);
 
-  const handleChange = (event) => {
-    const value = event.target.value;
+  React.useEffect(() => {
+    const clearQuery = () => setQuery("");
+    Router.events.on("routeChangeComplete", clearQuery);
+
+    return () => {
+      Router.events.off("routeChangeComplete", clearQuery);
+    };
+  }, []);
+
+  const onChange = (e) => {
+    const { value } = e.target;
     setQuery(value);
 
-    let machingCities = [];
+    let matchingCities = [];
 
     if (value.length > 3) {
       for (let city of cities) {
-        if (machingCities.length >= 5) {
+        if (matchingCities.length >= 5) {
           break;
         }
 
@@ -25,33 +35,46 @@ const searchbox = () => {
             ...city,
             slug: `${city.name.toLowerCase().replace(/ /g, "-")}-${city.id}`,
           };
-          machingCities.push(cityData);
+
+          matchingCities.push(cityData);
+          continue;
         }
       }
     }
-    setResult(machingCities);
+
+    return setResults(matchingCities);
   };
 
   return (
-    <div>
-      <input type="text" placeholder="buscar" onChange={handleChange} />
-      {result.length > 0 ? (
-        result.map((item) => {
-          <li key={item.slug}>
-            <Link href={`/location/${item.slug}`}>
-              <a>
-                {item.name}
-                {item.state ? `, ${item.state}` : ""} //', ' + {item.name}
-                <span>{item.country}</span>
-              </a>
-            </Link>
-          </li>;
-        })
-      ) : (
-        <li>No hay resultados</li>
+    <div className="search">
+      <input
+        type="text"
+        value={query}
+        onChange={onChange}
+        placeholder={placeholder ? placeholder : ""}
+      />
+
+      {query.length > 3 && (
+        <ul>
+          {results.length > 0 ? (
+            results.map((city) => {
+              return (
+                <li key={city.slug}>
+                  <Link href={`/location/${city.slug}`}>
+                    <a>
+                      {city.name}
+                      {city.state ? `, ${city.state}` : ""}{" "}
+                      <span>({city.country})</span>
+                    </a>
+                  </Link>
+                </li>
+              );
+            })
+          ) : (
+            <li className="search__no-results">No results found</li>
+          )}
+        </ul>
       )}
     </div>
   );
-};
-
-export default searchbox;
+}
